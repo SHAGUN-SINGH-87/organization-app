@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Management</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#add-organization">Add Organization</a></li>
+        <li><a href="#add-team">Add Team</a></li>
+        <li><a href="#add-member">Add Member</a></li>
+        <li><a href="#hierarchy">View Hierarchy</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <div id="home">
+        <h1>Welcome to Organization Management</h1>
+    </div>
+
+    <div id="add-organization">
+        <h2>Add Organization</h2>
+        <form action="/organizations" method="post">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="text" name="location" placeholder="Location" required>
+            <button type="submit">Add Organization</button>
+        </form>
+    </div>
+
+    <div id="add-team">
+        <h2>Add Team</h2>
+        <form action="/teams" method="post">
+            <select name="orgId" required>
+                <option value="" disabled selected>Select Organization</option>
+                <th:block th:each="org : ${organizations}">
+                    <option th:value="${org.id}" th:text="${org.name}"></option>
+                </th:block>
+            </select>
+            <input type="text" name="name" placeholder="Team Name" required>
+            <button type="submit">Add Team</button>
+        </form>
+    </div>
+
+    <div id="add-member">
+        <h2>Add Member</h2>
+        <form action="/members" method="post" enctype="multipart/form-data">
+            <select name="teamId" required>
+                <option value="" disabled selected>Select Team</option>
+                <th:block th:each="org : ${organizations}">
+                    <th:block th:each="team : ${org.teams}">
+                        <option th:value="${team.id}" th:text="${org.name + ' - ' + team.name}"></option>
+                    </th:block>
+                </th:block>
+            </select>
+            <input type="text" name="name" placeholder="Member Name" required>
+            <input type="text" name="uniqueId" placeholder="Member ID" required>
+            <input type="file" name="image" accept="image/*">
+            <button type="submit">Add Member</button>
+        </form>
+    </div>
+
+    <div id="hierarchy">
+        <h2>Organization Hierarchy</h2>
+        <div id="hierarchy-content"></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/organizations')
+            .then(response => response.json())
+            .then(organizations => {
+                const hierarchyContent = document.getElementById('hierarchy-content');
+                hierarchyContent.innerHTML = ''; // Clear existing content
+                organizations.forEach(org => {
+                    const orgDiv = document.createElement('div');
+                    orgDiv.innerHTML = `
+                        <strong>${org.name}</strong> (<span>${org.location}</span>)
+                        <ul>
+                            ${org.teams.map(team => `
+                                <li>
+                                    <span>${team.name}</span>
+                                    <ul>
+                                        ${team.members.map(member => `
+                                            <li>
+                                                <span>${member.name} (${member.uniqueId})</span>
+                                                <span class="status ${member.imageUploaded ? 'green' : 'red'}">
+                                                    ${member.imageUploaded ? 'Image Uploaded' : 'Image Not Uploaded'}
+                                                </span>
+                                                ${member.imageUploaded ? `<img src="${member.imagePath}" alt="Member Image" class="member-image">` : ''}
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                    hierarchyContent.appendChild(orgDiv);
+                });
+            })
+            .catch(error => console.error('Error fetching organization data:', error));
+    });
+</script>
+</body>
+</html>
+
+
+
+
+
+
