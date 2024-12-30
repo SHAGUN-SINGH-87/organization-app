@@ -25,21 +25,37 @@ import java.util.List;
 public class OrganizationController {
 
     private static String UPLOAD_DIR="uploads/";
+    static {
+        // Ensure upload directory exists
+        Path path = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     @Autowired
     private OrganizationRepository organizationRepository;
+    @Autowired
     private TeamRepository teamRepository;
+    @Autowired
     private MemberRepository memberRepository;
 
     @GetMapping("/")
-    public String index(Model model){
-        List<Organization> organizations=organizationRepository.findAll();
-        model.addAttribute("organizations",organizations);
+    public String index(Model model) {
+        List<Organization> organizations = organizationRepository.findAll(); // Fetch organizations with teams and members
+        model.addAttribute("organizations", organizations);
         return "index";
     }
 
     @PostMapping("/organizations")
     public String addOrganization(@RequestParam String name, @RequestParam String email,@RequestParam String location){
+        if (name == null || name.isEmpty() || email == null || email.isEmpty() || location == null || location.isEmpty()) {
+            return "redirect:/error"; // Show error page
+        }
         Organization organization=new Organization();
         organization.setName(name);
         organization.setEmail(email);
@@ -50,7 +66,8 @@ public class OrganizationController {
 
     @PostMapping("/teams")
     public String addTeam(@RequestParam Long orgId , @RequestParam String name){
-        Organization organization=organizationRepository.findById(orgId).orElseThrow();
+        Organization organization = organizationRepository.findById(orgId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid organization ID: " + orgId));
         Team team=new Team();
         team.setName(name);
         team.setOrganization(organization);
@@ -60,7 +77,8 @@ public class OrganizationController {
 
     @PostMapping("/members")
     public String addMember(@RequestParam Long teamId , @RequestParam String name, @RequestParam String uniqueId, @RequestParam("image")MultipartFile image){
-        Team team=teamRepository.findById(teamId).orElseThrow();
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid team ID: " + teamId));
         Member member=new Member();
         member.setName(name);
         member.setUniqueId(uniqueId);

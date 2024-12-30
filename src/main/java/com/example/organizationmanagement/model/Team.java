@@ -41,5 +41,9 @@ public class Team {
         public void setOrganization(Organization organization) {
                 this.organization = organization;
         }
-    }
+
+        public void setMembers(List<Member> members) {
+
+        }
+}
 
