@@ -1,6 +1,7 @@
 package com.example.organizationmanagement.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
